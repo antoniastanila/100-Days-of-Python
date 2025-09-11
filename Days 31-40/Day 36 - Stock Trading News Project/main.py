@@ -2,8 +2,8 @@ import requests
 STOCK = "TSLA"
 COMPANY_NAME = "Tesla Inc"
 
-STOCK_API_KEY = "3Y0L8O4D3M477PHI"
-NEWS_API_KEY = "a4ae6ec15ba54238910f561fc64c0b1c"
+STOCK_API_KEY = "your_API_key"
+NEWS_API_KEY = "your_API_key"
 
 stock_params = {
     "function": "TIME_SERIES_DAILY",
