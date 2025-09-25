@@ -42,28 +42,29 @@ class FlightSearch:
             authorization_endpoint, data=body, headers=headers)
         return response.json()["access_token"]
 
-    def search_for_flights(self, city, code):
+    def search_for_flights(self, city, code, dep_date=None):
         search_endpoint = "https://test.api.amadeus.com/v2/shopping/flight-offers"
         header = {
             "Authorization": f"Bearer {self._token}"
         }
-
+        dep = dep_date if dep_date else self._tomorrow_date
         params = {
-            "originLocationCode": "LON",
+            "originLocationCode": os.getenv("ORIGIN_CODE", "LON"),
             "destinationLocationCode": code,
             "departureDate": f"{self._tomorrow_date:%Y-%m-%d}",
             "adults": 1,
             "nonStop": "true",
             "currencyCode": "GBP"
         }
-        response = requests.get(url=search_endpoint,
-                                headers=header, params=params)
-        response.raise_for_status()
-
-        cheapest_flight = find_cheapest_flight(response.json()["data"])
-        if cheapest_flight != None:
-            price = cheapest_flight["price"]["total"]
-        else:
-            price = "N/A"
-        print(f"{city}: £{price}")
+        try:
+            response = requests.get(url=search_endpoint,
+                                    headers=header, params=params)
+            response.raise_for_status()
+            flight_offers = response.json()["data"]
+            cheapest_flight = find_cheapest_flight(flight_offers)
+            price_str = cheapest_flight["price"]["total"] if cheapest_flight else None
+            price = float(price_str) if price_str is not None else None
+        except (requests.RequestException, KeyError, ValueError):
+            price = None
+        print(f"{city} {dep:%Y-%m-%d}: £{price if price else 'N/A'}")
         return price

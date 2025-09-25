@@ -34,12 +34,16 @@ class DataManager:
         return response.json()
 
     def compare_prices(self, city, smallest_price, date):
+        if smallest_price is None:
+            return
         data = self.get_data()
         for piece in data:
             if piece["city"] == city:
                 price_from_sheet = piece["lowestPrice"]
                 destination_code = piece["iataCode"]
                 break
+        if price_from_sheet is None:
+            return
         try:
             if price_from_sheet > float(smallest_price):
                 with open("file.txt", "a") as data_file:
