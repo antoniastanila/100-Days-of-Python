@@ -53,4 +53,4 @@ if not playlist_exists:
             yt.add_playlist_items(
                 new_playlist, [search_result[0]["videoId"]], False)
         except ytmusicapi.exceptions.YTMusicServerError:
-            print(f"The song couldnt be added.")
+            print(f"The song couldn't be added.")
