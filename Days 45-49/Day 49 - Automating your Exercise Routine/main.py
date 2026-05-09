@@ -48,46 +48,34 @@ wait.until(ec.presence_of_element_located((By.ID, "schedule-page")))
 
 # ===================== Book the upcoming Tuesday class =====================
 
-time_list = driver.find_elements(By.CSS_SELECTOR, value="p[id^='class-time-']")
-time_list = [time for time in time_list]
+cards_list = driver.find_elements(
+    By.CSS_SELECTOR, value="div[id^='class-card-']")
 
-buttons_list = driver.find_elements(
-    By.CSS_SELECTOR, value="button[id^='book-button-']")
-
-for index in range(len(time_list) - 1):
-    if time_list[index].text == "Time: 6:00 PM":
-        parent_div = time_list[index].find_element(
+for card in cards_list:
+    time = card.find_element(By.CSS_SELECTOR, value="p[id^='class-time']")
+    if time.text == "Time: 6:00 PM":
+        parent_div = card.find_element(
             By.XPATH,
             "./ancestor::div[starts-with(@id, 'day-group-')][1]"
         )
         day = parent_div.find_element(By.TAG_NAME, value="h2").text
-        print(day.split())
-        if 'Tue,' in day.split():
-            card_div = time_list[index].find_element(
-                By.XPATH, "./ancestor::div[starts-with(@id, 'class-card-')][1]")
-            class_name = card_div.find_element(
+
+        if '(Tue' in day.split() or 'Tue,' in day.split():
+            book_button = card.find_element(
+                By.CSS_SELECTOR, value="button[id^='book-button-']")
+            class_name = card.find_element(
                 By.CSS_SELECTOR, value="h3[id^='class-name-']").text
             try:
-                buttons_list[index].click()
+                book_button.click()
             except:
-                print("Couldn't book!")
+                print("Couldn't book class!")
             else:
-                print(
-                    f"✓ Booked: {class_name} on Tue, {day.split()[1]} {day.split()[2]}")
-            finally:
-                break
-        elif '(Tue,' in day.split():
-            card_div = time_list[index].find_element(
-                By.XPATH, "./ancestor::div[starts-with(@id, 'class-card-')][1]")
-            class_name = card_div.find_element(
-                By.CSS_SELECTOR, value="h3[id^='class-name-']").text
-            try:
-                buttons_list[index].click()
-            except:
-                print("Couldn't book!")
-            else:
-                print(
-                    f"✓ Booked: {class_name} on Tue, {day.split()[2]} {day.split()[3].replace(")", "")}")
+                if 'Tue,' in day.split():
+                    print(
+                        f"✓ Booked: {class_name} on Tue, {day.split()[1]} {day.split()[2]}")
+                elif '(Tue' in day.split():
+                    print(
+                        f"✓ Booked: {class_name} on Tue, {day.split()[2]} {day.split()[3].replace(")", "")}")
             finally:
                 break
 
