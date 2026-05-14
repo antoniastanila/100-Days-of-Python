@@ -52,11 +52,11 @@ wait = WebDriverWait(driver, 10)
 #     (By.CSS_SELECTOR, "input[type='email']")))
 # email_input.send_keys(MY_EMAIL, Keys.ENTER)
 
+body = driver.find_element(By.TAG_NAME, value="body")
+
 for index in range(100):
     try:
-        dislike_button = wait.until(ec.element_to_be_clickable(
-            (By.XPATH, '//*[@id="main-content"]/div[1]/div/div/div/div[1]/div/div/div[4]/div/div[2]/button')))
-        dislike_button.click()
+        body.send_keys(Keys.ARROW_LEFT)
         time.sleep(2)
     except TimeoutException:
         print("Had a little issue there... oops")
