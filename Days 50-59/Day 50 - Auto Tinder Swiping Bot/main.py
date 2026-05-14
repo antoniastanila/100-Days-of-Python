@@ -16,19 +16,51 @@ MY_EMAIL = os.getenv("MY_EMAIL")
 chrome_options = webdriver.ChromeOptions()
 
 chrome_options.add_experimental_option("detach", True)
+
+user_data_dir = os.path.join(os.getcwd(), "chrome_profile")
+chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
+
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(URL)
 
+wait = WebDriverWait(driver, 10)
 
-time.sleep(2)
-login_button = driver.find_element(By.LINK_TEXT, value="Log in")
-login_button.click()
 
-time.sleep(2)
-google_button = driver.find_element(
-    By.CSS_SELECTOR, value="#t-671667020 .S9gUrf-YoZ4jf")
-google_button.click()
+# LOGIN WORKFLOW COMMENTED BECAUSE GOOGLE DOESN'T ALLOW BOTS TO INTRODUCE PASSWORDS DUE TO SECURITY REASONS
 
-time.sleep(6)
-email_input = driver.find_element(By.XPATH, value='//*[@id="identifierId"]')
-email_input.send_keys(MY_EMAIL, Keys.ENTER)
+# login_button = wait.until(
+#     ec.element_to_be_clickable((By.LINK_TEXT, "Log in"))
+# )
+
+# login_button.click()
+
+# google_iframe = wait.until(ec.presence_of_element_located(
+#     (By.CSS_SELECTOR, "iframe[src*='accounts.google.com/gsi/button']")
+# ))
+# driver.switch_to.frame(google_iframe)
+
+# google_button = wait.until(
+#     ec.element_to_be_clickable((By.CSS_SELECTOR, "div[role='button']"))
+# )
+# google_button.click()
+
+# driver.switch_to.default_content()
+
+# driver.switch_to.window(driver.window_handles[-1])
+
+# email_input = wait.until(ec.presence_of_element_located(
+#     (By.CSS_SELECTOR, "input[type='email']")))
+# email_input.send_keys(MY_EMAIL, Keys.ENTER)
+
+for index in range(100):
+    try:
+        dislike_button = wait.until(ec.element_to_be_clickable(
+            (By.XPATH, '//*[@id="main-content"]/div[1]/div/div/div/div[1]/div/div/div[4]/div/div[2]/button')))
+        dislike_button.click()
+        time.sleep(2)
+    except TimeoutException:
+        print("Had a little issue there... oops")
+        driver.save_screenshot(f"timeout_{index}.png")
+        break
+
+# print(driver.window_handles)
