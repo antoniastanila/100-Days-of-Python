@@ -1,0 +1,38 @@
+RECAPITULARE BEAUTIFUL SOUP:
+=============================
+
+import requests
+from bs4 import BeautifulSoup
+
+response = requests.get(URL)
+response.raise_for_status()
+
+soup = BeautifulSoup(response.text, "html.parser")
+
+element = soup.find(id="title")
+elements = soup.find_all(class_="title")
+element_css = soup.select_one(.a-price-whole)
+elements_css = soup.select(#title) nu exista select all!
+
+text = element.get_text(strip=True)
+
+
+
+RECAPITULARE SELENIUM:
+=======================
+
+import os
+from dotenv import load_dotenv
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+load_dotenv()
+
+URL = os.getenv("DESIRED_URL")
+
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_experimental_option("detach", True)
+
+driver = webdriver.Chrome(options=chrome_options)
+driver.get(URL)
+
