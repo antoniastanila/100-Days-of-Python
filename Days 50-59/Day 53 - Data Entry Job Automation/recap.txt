@@ -18,8 +18,8 @@ text = element.get_text(strip=True)
 
 
 
-RECAPITULARE SELENIUM:
-=======================
+RECAPITULARE SELENIUM, PARTE DE INCEPUT:
+======================================
 
 import os
 from dotenv import load_dotenv
