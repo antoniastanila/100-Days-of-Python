@@ -26,8 +26,9 @@ def blog_post():
     return render_template("blog.html", allPosts=allPosts)
 
 
-@app.route("/link")
-def get_link():
+@app.route("/link/<num>")
+def get_link(num):
+    print(num)
     return render_template("link.html")
 
 

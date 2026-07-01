@@ -14,7 +14,7 @@
     <h2>{{post["subtitle"]}}</h2>
     {% endif %}
     {% endfor %}
-    <a href="{{ url_for('get_link') }}">Click here</a>
+    <a href="{{ url_for('get_link', num=3) }}">Click here</a>
 </body>
 
 </html>
