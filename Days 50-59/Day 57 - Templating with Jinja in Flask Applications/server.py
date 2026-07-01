@@ -1,15 +1,22 @@
 from flask import Flask, render_template
-import random
-import datetime
+from age_gender import get_gender, get_age
 app = Flask(__name__)
 
 
 @app.route("/")
 def main():
-    random_nr = random.randint(1, 10)
-    curr_year = datetime.datetime.now().year
-    my_name = "Anto"
-    return render_template("index.html", num=random_nr, curr_year=curr_year, my_name=my_name)
+    return "Hello World!"
+
+
+@app.route("/guess/<name>")
+def guess(name):
+    gender = get_gender(name)
+    age = get_age(name)
+    name = name.capitalize()
+    return render_template("index.html",
+                           name=name,
+                           age=age,
+                           gender=gender)
 
 
 if __name__ == "__main__":
