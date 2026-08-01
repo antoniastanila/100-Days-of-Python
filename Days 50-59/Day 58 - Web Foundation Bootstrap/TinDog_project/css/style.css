@@ -26,3 +26,15 @@
   height: 100px;
   border-radius: 50%;
 }
+
+.white-background{
+  background-color: white;
+}
+
+.gray-background{
+  background-color: #f8f9fa;
+}
+
+.pebbles{
+  font-size: large;
+}
