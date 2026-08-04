@@ -36,5 +36,9 @@
 }
 
 .pebbles{
-  font-size: large;
+  font-size: 25px;
+}
+
+.images{
+  align-self: center;
 }
