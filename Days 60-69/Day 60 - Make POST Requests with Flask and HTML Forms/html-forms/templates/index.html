@@ -3,17 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Form</title>
   </head>
   <body>
     <h1>ANTOOOO</h1>
     <hr />
 
-    <form action="/login" method="post" target="_blank">
+    <form action="{{ url_for('receive_data') }}" method="post" target="_blank">
       <label for="name">Name:</label>
-      <input type="text" placeholder="Name" id="name" />
+      <!-- the NAME attribute is very important, beacuse it is the one that helps the "request" method from flask work
+       we do it this way: name = request.form['username'] (where "username" is the name attribute just below)-->
+      <input type="text" placeholder="Name" name="username" id="name" />
       <label for="password">Password:</label>
-      <input type="text" placeholder="Password" id="password" />
+      <input type="text" placeholder="Password" name="password" id="password" />
       <button type="submit">ok</button>
     </form>
     
