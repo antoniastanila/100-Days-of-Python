@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, validators
 from wtforms.validators import DataRequired
+from flask_bootstrap import Bootstrap5
 
 
 class MyForm(FlaskForm):
@@ -13,6 +14,8 @@ class MyForm(FlaskForm):
 
         
 app = Flask(__name__)
+
+bootstrap = Bootstrap5(app)
 
 load_dotenv()
 
