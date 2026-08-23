@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -11,7 +11,11 @@
     {% endif %}
     <ul>
       {% for book in all_books %}
-      <li>{{book["bookname"]}} - {{book["bookauthor"]}} - {{book["rating"]}}</li>
+      <li>
+        <a href="{{ url_for('delete', id=book.id) }}">Delete</a>
+        {{book["title"]}} - {{book["author"]}} - {{book["rating"]}}
+        <a href="{{url_for('edit', id = book['id'])}}">Edit Rating</a>
+      </li>
       {% endfor %}
     </ul>
 
