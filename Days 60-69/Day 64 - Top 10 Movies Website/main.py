@@ -8,6 +8,12 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
 
+class UpdateForm(FlaskForm):
+    rating = StringField(label='Your rating out of 10 e.g. 7.5', validators=[DataRequired()])
+    review = StringField(label='Your review', validators=[DataRequired()])
+    submit = SubmitField(label='Update')
+
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
@@ -39,23 +45,57 @@ with app.app_context():
 ## After adding the new_movie the code needs to be commented out/deleted.
 ## So you are not trying to add the same movie twice. The db will reject non-unique movie titles.
 
-with app.app_context():
-    new_movie = Movie(
-        title="Phone Booth",
-        year=2002,
-        description="Publicist Stuart Shepard finds himself trapped in a phone booth, pinned down by an extortionist's sniper rifle. Unable to leave or receive outside help, Stuart's negotiation with the caller leads to a jaw-dropping climax.",
-        rating=7.3,
-        ranking=10,
-        review="My favourite character was the caller.",
-        img_url="https://image.tmdb.org/t/p/w500/tjrX2oWRCM3Tvarz38zlZM7Uc10.jpg"
-    )
-    db.session.add(new_movie)
-    db.session.commit()
+# with app.app_context():
+    # new_movie = Movie(
+    #     title="Phone Booth",
+    #     year=2002,
+    #     description="Publicist Stuart Shepard finds himself trapped in a phone booth, pinned down by an extortionist's sniper rifle. Unable to leave or receive outside help, Stuart's negotiation with the caller leads to a jaw-dropping climax.",
+    #     rating=7.3,
+    #     ranking=10,
+    #     review="My favourite character was the caller.",
+    #     img_url="https://image.tmdb.org/t/p/w500/tjrX2oWRCM3Tvarz38zlZM7Uc10.jpg"
+    # )
+
+    # second_movie = Movie(
+    #     title="Avatar The Way of Water",
+    #     year=2022,
+    #     description="Set more than a decade after the events of the first film, learn the story of the Sully family (Jake, Neytiri, and their kids), the trouble that follows them, the lengths they go to keep each other safe, the battles they fight to stay alive, and the tragedies they endure.",
+    #     rating=7.3,
+    #     ranking=9,
+    #     review="I liked the water.",
+    #     img_url="https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg"
+    # )
+    # db.session.add(second_movie)
+    # db.session.commit()
+
+
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    # READ A PARTICULAR RECORD By Query
+    with app.app_context():
+        movies = db.session.execute(db.select(Movie)).scalars().all()
+    return render_template("index.html", movies=movies)
 
+# @app.route("/<int:number>")
+
+@app.route("/edit", methods = ['POST', 'GET'])
+def edit():
+    form = UpdateForm()
+    id = request.args.get("id")
+
+    # with app.app_context(): <- nu ai nevoie cand esti in interiorul unei rute Flask, deoarece application context exista deja aici
+
+    movie = db.session.execute(db.select(Movie).where(Movie.id == id)).scalar()
+    # sau aici mai puteam sa fac: movie = db.get_or_404(Movie, id)
+
+    if form.validate_on_submit():
+        movie.review = form.review.data
+        movie.rating = float(form.rating.data)
+        db.session.commit()
+        return redirect(url_for("home"))
+    
+    return render_template("edit.html", form=form)
 
 if __name__ == '__main__':
     app.run(debug=True)
