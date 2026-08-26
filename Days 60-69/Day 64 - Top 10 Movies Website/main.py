@@ -7,12 +7,21 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+api_key = os.getenv("api_key")
 
 class UpdateForm(FlaskForm):
     rating = StringField(label='Your rating out of 10 e.g. 7.5', validators=[DataRequired()])
     review = StringField(label='Your review', validators=[DataRequired()])
     submit = SubmitField(label='Update')
 
+class AddMovieForm(FlaskForm):
+    title = StringField(label='Title',validators=[DataRequired()])
+    submit = SubmitField(label='Add')
 
 
 app = Flask(__name__)
@@ -104,6 +113,17 @@ def delete():
     db.session.delete(movie_to_delete)
     db.session.commit()
     return redirect(url_for("home"))
+
+@app.route("/add", methods = ['GET', 'POST'])
+def add():
+    addForm = AddMovieForm()
+    if addForm.validate_on_submit():
+        movieTitle = addForm.title.data
+        res = requests.get(url="https://api.themoviedb.org/3/search/movie")
+        res.raise_for_status()
+        data = res.json()
+        print(data)
+    return render_template("add.html", form = addForm)
 
 if __name__ == '__main__':
     app.run(debug=True)
