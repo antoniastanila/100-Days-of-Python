@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 api_key = os.getenv("api_key")
+token = os.getenv("bearer_token")
 
 class UpdateForm(FlaskForm):
     rating = StringField(label='Your rating out of 10 e.g. 7.5', validators=[DataRequired()])
@@ -50,33 +51,6 @@ class Movie(db.Model):
 
 with app.app_context():
     db.create_all()
-
-## After adding the new_movie the code needs to be commented out/deleted.
-## So you are not trying to add the same movie twice. The db will reject non-unique movie titles.
-
-# with app.app_context():
-    # new_movie = Movie(
-    #     title="Phone Booth",
-    #     year=2002,
-    #     description="Publicist Stuart Shepard finds himself trapped in a phone booth, pinned down by an extortionist's sniper rifle. Unable to leave or receive outside help, Stuart's negotiation with the caller leads to a jaw-dropping climax.",
-    #     rating=7.3,
-    #     ranking=10,
-    #     review="My favourite character was the caller.",
-    #     img_url="https://image.tmdb.org/t/p/w500/tjrX2oWRCM3Tvarz38zlZM7Uc10.jpg"
-    # )
-
-    # second_movie = Movie(
-    #     title="Avatar The Way of Water",
-    #     year=2022,
-    #     description="Set more than a decade after the events of the first film, learn the story of the Sully family (Jake, Neytiri, and their kids), the trouble that follows them, the lengths they go to keep each other safe, the battles they fight to stay alive, and the tragedies they endure.",
-    #     rating=7.3,
-    #     ranking=9,
-    #     review="I liked the water.",
-    #     img_url="https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg"
-    # )
-    # db.session.add(second_movie)
-    # db.session.commit()
-
 
 
 @app.route("/")
@@ -119,11 +93,26 @@ def add():
     addForm = AddMovieForm()
     if addForm.validate_on_submit():
         movieTitle = addForm.title.data
-        res = requests.get(url="https://api.themoviedb.org/3/search/movie")
+
+        params = {
+            "query" : movieTitle
+        }
+        headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {token}"
+        }
+
+        res = requests.get(url="https://api.themoviedb.org/3/search/movie", params=params, headers=headers)
         res.raise_for_status()
-        data = res.json()
-        print(data)
+        results = res.json()['results']
+
+        return render_template("select.html", results = results)
+        
     return render_template("add.html", form = addForm)
+
+@app.route("/select")
+def select():
+    return render_template("select.html")
 
 if __name__ == '__main__':
     app.run(debug=True)

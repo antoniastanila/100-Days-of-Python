@@ -18,5 +18,12 @@ params = {
 
 res = req.get(url="https://api.themoviedb.org/3/search/movie", headers=headers, params=params)
 res.raise_for_status()
-data = res.json()
-print(data)
+results = res.json()['results']
+
+movies_and_dates = []
+for result in results:
+    movies_and_dates.append((result['title'], result['release_date']))
+
+for elements in movies_and_dates:
+    print(f"{elements[0]} - {elements[1]}\n")
+            
