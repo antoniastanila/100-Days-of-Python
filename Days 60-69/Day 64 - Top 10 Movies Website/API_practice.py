@@ -26,4 +26,9 @@ for result in results:
 
 for elements in movies_and_dates:
     print(f"{elements[0]} - {elements[1]}\n")
-            
+
+
+url = "https://api.themoviedb.org/3/movie/98?language=en-US"
+
+response = req.get(url, headers=headers)
+print(response.json()["poster_path"])

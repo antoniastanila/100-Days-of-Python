@@ -15,6 +15,11 @@ load_dotenv()
 api_key = os.getenv("api_key")
 token = os.getenv("bearer_token")
 
+headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {token}"
+}
+
 class UpdateForm(FlaskForm):
     rating = StringField(label='Your rating out of 10 e.g. 7.5', validators=[DataRequired()])
     review = StringField(label='Your review', validators=[DataRequired()])
@@ -44,9 +49,9 @@ class Movie(db.Model):
     title: Mapped[str] =  mapped_column(String(250), unique=True, nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String(250), nullable=False)
-    rating: Mapped[float] = mapped_column(Float, nullable=False) 
-    ranking: Mapped[int] = mapped_column(Integer, nullable=False)
-    review: Mapped[str] =  mapped_column(String(250), nullable=False)
+    rating: Mapped[float] = mapped_column(Float) 
+    ranking: Mapped[int] = mapped_column(Integer)
+    review: Mapped[str] =  mapped_column(String(250))
     img_url: Mapped[str] = mapped_column(String, nullable=False)
 
 with app.app_context():
@@ -97,10 +102,7 @@ def add():
         params = {
             "query" : movieTitle
         }
-        headers = {
-            "accept": "application/json",
-            "Authorization": f"Bearer {token}"
-        }
+        
 
         res = requests.get(url="https://api.themoviedb.org/3/search/movie", params=params, headers=headers)
         res.raise_for_status()
@@ -112,7 +114,16 @@ def add():
 
 @app.route("/select")
 def select():
-    return render_template("select.html")
+    # return render_template("select.html")
+    movie_id = request.args.get("id")
+    response = requests.get(url=f"https://api.themoviedb.org/3/movie/{movie_id}?language=en-US", headers=headers)
+    movie_data = response.json()
 
+    # Creation of the movie
+    new_movie = Movie(title = movie_data["title"], img_url = movie_data["poster_path"], year = movie_data["release_date"], description = movie_data["overview"], rating=2, ranking = 2, review="aaa")
+    db.session.add(new_movie)
+    db.session.commit()
+
+    return render_template("index.html")
 if __name__ == '__main__':
     app.run(debug=True)
