@@ -49,9 +49,9 @@ class Movie(db.Model):
     title: Mapped[str] =  mapped_column(String(250), unique=True, nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String(250), nullable=False)
-    rating: Mapped[float] = mapped_column(Float) 
-    ranking: Mapped[int] = mapped_column(Integer)
-    review: Mapped[str] =  mapped_column(String(250))
+    rating: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ranking: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    review: Mapped[str | None] = mapped_column(String(250), nullable=True)
     img_url: Mapped[str] = mapped_column(String, nullable=False)
 
 with app.app_context():
@@ -99,31 +99,40 @@ def add():
     if addForm.validate_on_submit():
         movieTitle = addForm.title.data
 
-        params = {
-            "query" : movieTitle
-        }
+        return redirect(url_for("select", movieTitle=movieTitle))
         
 
-        res = requests.get(url="https://api.themoviedb.org/3/search/movie", params=params, headers=headers)
-        res.raise_for_status()
-        results = res.json()['results']
-
-        return render_template("select.html", results = results)
+        # return render_template("select.html", results = results)    
         
     return render_template("add.html", form = addForm)
 
 @app.route("/select")
 def select():
-    # return render_template("select.html")
+
+    movieTitle = request.args.get("movieTitle")
+    params = {
+         "query" : movieTitle
+    }
+    res = requests.get(url="https://api.themoviedb.org/3/search/movie", params=params, headers=headers)
+    res.raise_for_status()
+    results = res.json()['results']
+
+    return render_template("select.html", results=results)
+
+
+@app.route("/selected_movie")
+def selected_movie():
     movie_id = request.args.get("id")
     response = requests.get(url=f"https://api.themoviedb.org/3/movie/{movie_id}?language=en-US", headers=headers)
     movie_data = response.json()
-
+    
     # Creation of the movie
-    new_movie = Movie(title = movie_data["title"], img_url = movie_data["poster_path"], year = movie_data["release_date"], description = movie_data["overview"], rating=2, ranking = 2, review="aaa")
+    new_movie = Movie(title = movie_data["title"], img_url = movie_data["poster_path"], year = movie_data["release_date"], description = movie_data["overview"])
     db.session.add(new_movie)
     db.session.commit()
 
-    return render_template("index.html")
+    return redirect(url_for("home"))
+    # return render_template("index.html")
+
 if __name__ == '__main__':
     app.run(debug=True)
