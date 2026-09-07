@@ -60,9 +60,13 @@ with app.app_context():
 
 @app.route("/")
 def home():
-    # READ A PARTICULAR RECORD By Query
-    with app.app_context():
-        movies = db.session.execute(db.select(Movie)).scalars().all()
+    # READ A PARTICULAR RECORD By Query and order by rating
+    movies = db.session.execute(db.select(Movie).order_by(Movie.rating)).scalars().all()
+    num_of_movies = len(movies)
+    for i in range(0, num_of_movies):
+        movies[i].ranking = num_of_movies - i
+        
+    db.session.commit()
     return render_template("index.html", movies=movies)
 
 # @app.route("/<int:number>")
@@ -122,17 +126,18 @@ def select():
 
 @app.route("/selected_movie")
 def selected_movie():
+    MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
     movie_id = request.args.get("id")
     response = requests.get(url=f"https://api.themoviedb.org/3/movie/{movie_id}?language=en-US", headers=headers)
     movie_data = response.json()
     
     # Creation of the movie
-    new_movie = Movie(title = movie_data["title"], img_url = movie_data["poster_path"], year = movie_data["release_date"], description = movie_data["overview"])
+    new_movie = Movie(title = movie_data["title"], img_url = f"{MOVIE_DB_IMAGE_URL}{movie_data['poster_path']}", year = movie_data["release_date"], description = movie_data["overview"])
     db.session.add(new_movie)
     db.session.commit()
 
-    return redirect(url_for("home"))
-    # return render_template("index.html")
+    return redirect(url_for("edit", id = new_movie.id))
+    # not this: return render_template("index.html")
 
 if __name__ == '__main__':
     app.run(debug=True)
