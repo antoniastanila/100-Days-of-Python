@@ -4,6 +4,10 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Boolean
 from random import choice
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "instance" / "cafes.db"
@@ -124,6 +128,24 @@ def update_coffee_price(cafe_id):
         db.session.commit()
         return jsonify({"success" : "Successfully updated the price!"}), 200
 
+@app.route("/report-closed/<cafe_id>", methods=["DELETE"])
+def delete_cafe(cafe_id):
+    our_key = os.getenv("secret-key")
+    print(our_key)
+    try:
+        cafe_to_delete = db.get_or_404(Cafe, cafe_id) 
+    except:
+        return jsonify({"error" : {
+            "Not Found" : "Sorry, a cafe with that id was not found in the database."
+        }}), 404
+    else:
+        if request.args.get("api-key") == our_key:
+            db.session.delete(cafe_to_delete)
+            db.session.commit()
+            return jsonify({"success" : "Successfully deleted the cafe!"}), 200
+        return jsonify({"error" : "Sorry, that's not allowed. Make sure you have the correct API key."})
+
+    
 # HTTP GET - Read Record
 
 # HTTP POST - Create Record
