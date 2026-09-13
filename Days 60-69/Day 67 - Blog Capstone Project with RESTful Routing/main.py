@@ -69,6 +69,7 @@ def show_post(post_id):
 @app.route("/new_post", methods = ['GET', 'POST'])
 def add_new_post():
     new_blog_post_form = BlogPostForm()
+    heading_title = "New Post"
     if new_blog_post_form.validate_on_submit():
         title = new_blog_post_form.title.data
         subtitle = new_blog_post_form.subtitle.data
@@ -77,7 +78,7 @@ def add_new_post():
         img_url = new_blog_post_form.img_url.data
 
         today = datetime.datetime.now()
-        date = f"{today.strftime("%B")} {today.strftime("%d")}, {today.year}" 
+        date = f"{today.strftime('%B')} {today.strftime('%d')}, {today.year}" 
         
         new_blog = BlogPost(title = title, subtitle = subtitle, author = name, date = date, body = body, img_url = img_url)
         db.session.add(new_blog)
@@ -85,14 +86,35 @@ def add_new_post():
 
         return redirect(url_for('get_all_posts'))
 
-    return render_template("make-post.html", form = new_blog_post_form)
+    return render_template("make-post.html", form = new_blog_post_form, heading_title = heading_title)
 
 
-# TODO: edit_post() to change an existing blog post
+@app.route("/edit-post/<post_id>", methods = ['GET', 'POST'])
+def edit_post(post_id):
+    post = db.get_or_404(BlogPost, post_id)
+    edit_form = BlogPostForm(
+        title=post.title,
+        subtitle=post.subtitle,
+        img_url=post.img_url,
+        name=post.author,
+        body=post.body
+    )
+    heading_title = "Edit Post"
+    if edit_form.validate_on_submit():
+        post.title = edit_form.title.data
+        post.subtitle = edit_form.subtitle.data
+        post.img_url = edit_form.img_url.data
+        post.author = edit_form.name.data
+        post.body= edit_form.body.data
+
+        db.session.commit() 
+
+        return redirect(url_for('show_post', post_id = post_id))
+
+    return render_template("make-post.html", form = edit_form, heading_title = heading_title)
 
 # TODO: delete_post() to remove a blog post from the database
 
-# Below is the code from previous lessons. No changes needed.
 @app.route("/about")
 def about():
     return render_template("about.html")

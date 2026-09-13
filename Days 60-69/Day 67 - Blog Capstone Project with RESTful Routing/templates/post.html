@@ -30,7 +30,8 @@
           <!-- TODO: Editing posts-->
           <a
             class="btn btn-primary float-right"
-            href="TODO: Add code to edit_post here"
+            /* NEPARAT NUMELE VARIABILEI POST_ID SA FIE ACEEASI CA CEA DE LA RUTA DIN SERVER!!! */
+            href="{{url_for('edit_post', post_id = post.id)}}"
             >Edit Post</a
           >
         </div>
