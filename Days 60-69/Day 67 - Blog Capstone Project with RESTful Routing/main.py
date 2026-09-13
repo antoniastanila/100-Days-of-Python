@@ -11,6 +11,7 @@ from datetime import date
 from dotenv import load_dotenv
 import os
 from pathlib import Path
+import datetime
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "instance" / "posts.db"
@@ -25,7 +26,7 @@ class BlogPostForm(FlaskForm):
     subtitle = StringField(label='Subtitle', validators=[DataRequired()])
     name = StringField(label='Your Name', validators=[DataRequired()])
     img_url = StringField(label='Blog Image URL', validators=[DataRequired()])
-    body = 'TODO: Add a CKEditorField'
+    body = CKEditorField(label = 'Body', validators=[DataRequired()])
     submit = SubmitField(label = 'Submit Post')
 
 # CREATE DATABASE
@@ -33,6 +34,8 @@ class Base(DeclarativeBase):
     pass
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH.as_posix()}"
 db = SQLAlchemy(model_class=Base)
+
+ckeditor = CKEditor(app)
 db.init_app(app)
 
 
@@ -59,15 +62,29 @@ def get_all_posts():
 
 @app.route('/<post_id>')
 def show_post(post_id):
-    # TODO: Retrieve a BlogPost from the database based on the post_id
     requested_post = db.get_or_404(BlogPost, post_id)
     return render_template("post.html", post=requested_post)
 
 
-# TODO: add_new_post() to create a new blog post
 @app.route("/new_post", methods = ['GET', 'POST'])
 def add_new_post():
     new_blog_post_form = BlogPostForm()
+    if new_blog_post_form.validate_on_submit():
+        title = new_blog_post_form.title.data
+        subtitle = new_blog_post_form.subtitle.data
+        name = new_blog_post_form.name.data
+        body = new_blog_post_form.body.data
+        img_url = new_blog_post_form.img_url.data
+
+        today = datetime.datetime.now()
+        date = f"{today.strftime("%B")} {today.strftime("%d")}, {today.year}" 
+        
+        new_blog = BlogPost(title = title, subtitle = subtitle, author = name, date = date, body = body, img_url = img_url)
+        db.session.add(new_blog)
+        db.session.commit()
+
+        return redirect(url_for('get_all_posts'))
+
     return render_template("make-post.html", form = new_blog_post_form)
 
 
