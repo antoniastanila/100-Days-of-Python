@@ -20,6 +20,14 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 Bootstrap5(app)
 
+class BlogPostForm(FlaskForm):
+    title = StringField(label='Blog Post Title', validators=[DataRequired()])
+    subtitle = StringField(label='Subtitle', validators=[DataRequired()])
+    name = StringField(label='Your Name', validators=[DataRequired()])
+    img_url = StringField(label='Blog Image URL', validators=[DataRequired()])
+    body = 'TODO: Add a CKEditorField'
+    submit = SubmitField(label = 'Submit Post')
+
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
@@ -59,7 +67,8 @@ def show_post(post_id):
 # TODO: add_new_post() to create a new blog post
 @app.route("/new_post", methods = ['GET', 'POST'])
 def add_new_post():
-    return render_template("make-post.html")
+    new_blog_post_form = BlogPostForm()
+    return render_template("make-post.html", form = new_blog_post_form)
 
 
 # TODO: edit_post() to change an existing blog post
