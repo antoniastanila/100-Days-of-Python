@@ -9,8 +9,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret-key-goes-here'
 
 # CREATE DATABASE
-
-
 class Base(DeclarativeBase):
     pass
 
@@ -20,23 +18,29 @@ db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
 # CREATE TABLE IN DB
-
-
-class User(db.Model):
+class User(db.Model, UserMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String(100))
     name: Mapped[str] = mapped_column(String(1000))
 
+    # is_authenticated: Mapped[bool] 
+    # is_active: Mapped[bool]
+    # is_anonymous: Mapped[bool]
+
+    # def get_id(self):
+    #     return self.id
+
 
 with app.app_context():
     db.create_all()
 
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 @app.route('/')
 def home():
     return render_template("index.html")
-
 
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
@@ -51,22 +55,33 @@ def register():
         return render_template("secrets.html", name = new_user.name)
     return render_template("register.html")
 
-
-@app.route('/login')
+@app.route('/login', methods = ['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        user_emal = request.form.get('email')
+        user_password = request.form.get('password')
+        user = db.session.execute(db.select(User).where(User.email == user_emal)).scalar()
+
+        if check_password_hash(user.password, user_password):
+            return render_template("secrets.html", name = user.name)
+        else:
+            pass
     return render_template("login.html")
 
-
+@login_required
 @app.route('/secrets')
 def secrets():
+    # if User.get(user_id):
+    #     return render_template("secrets.html")
     return render_template("secrets.html")
 
-
+@login_manager.user_loader
 @app.route('/logout')
-def logout():
-    pass
+def logout(user_id):
+    id = User.get(user_id)
+    return render_template("index.html")
 
-
+@login_required
 @app.route('/download', methods = ['GET'])
 def download():
     return send_from_directory('static', path="files/cheat_sheet.pdf")
