@@ -41,7 +41,10 @@ def home():
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        new_user = User(email = request.form['email'], password = request.form['password'], name = request.form['name'])
+        password = request.form['password']
+        hash_and_salted_password = generate_password_hash(password, method='pbkdf2', salt_length=8)
+
+        new_user = User(email = request.form['email'], password = hash_and_salted_password, name = request.form['name'])
         # to tap into a field of the form, you could also do it like this: request.form.get('name')
         db.session.add(new_user)
         db.session.commit()
@@ -64,9 +67,9 @@ def logout():
     pass
 
 
-@app.route('/download')
+@app.route('/download', methods = ['GET'])
 def download():
-    pass
+    return send_from_directory('static', path="files/cheat_sheet.pdf")
 
 
 if __name__ == "__main__":
