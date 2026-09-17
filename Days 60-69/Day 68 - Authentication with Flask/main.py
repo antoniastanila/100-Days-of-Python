@@ -18,7 +18,7 @@ db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
 # CREATE TABLE IN DB
-class User(db.Model, UserMixin):
+class User(UserMixin, db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(100), unique=True)
     password: Mapped[str] = mapped_column(String(100))
@@ -38,6 +38,11 @@ with app.app_context():
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+# Create a user_loader callback
+@login_manager.user_loader
+def load_user(user_id):
+    return db.get_or_404(User, user_id)
+
 @app.route('/')
 def home():
     return render_template("index.html")
@@ -52,7 +57,12 @@ def register():
         # to tap into a field of the form, you could also do it like this: request.form.get('name')
         db.session.add(new_user)
         db.session.commit()
-        return render_template("secrets.html", name = new_user.name)
+
+        login_user(new_user)
+
+        # Can redirect() and get name from the current_user
+        return redirect(url_for("secrets"))    
+    
     return render_template("register.html")
 
 @app.route('/login', methods = ['GET', 'POST'])
@@ -63,26 +73,25 @@ def login():
         user = db.session.execute(db.select(User).where(User.email == user_emal)).scalar()
 
         if check_password_hash(user.password, user_password):
-            return render_template("secrets.html", name = user.name)
+            login_user(user)
+            return redirect(url_for('secrets'))
         else:
             pass
     return render_template("login.html")
 
-@login_required
 @app.route('/secrets')
-def secrets():
-    # if User.get(user_id):
-    #     return render_template("secrets.html")
-    return render_template("secrets.html")
-
-@login_manager.user_loader
-@app.route('/logout')
-def logout(user_id):
-    id = User.get(user_id)
-    return render_template("index.html")
-
 @login_required
+def secrets():
+    print(current_user.name) # what?? current_user? where does the program know what that is??
+    return render_template("secrets.html", name = current_user.name)
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
+
 @app.route('/download', methods = ['GET'])
+@login_required
 def download():
     return send_from_directory('static', path="files/cheat_sheet.pdf")
 
