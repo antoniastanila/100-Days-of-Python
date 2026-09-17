@@ -58,8 +58,6 @@ def register():
             new_user = User(email = request.form['email'], password = hash_and_salted_password, name = request.form['name'])
             # to tap into a field of the form, you could also do it like this: request.form.get('name')
 
-            
-
             db.session.add(new_user)
             db.session.commit()
 
@@ -100,8 +98,12 @@ def login():
 @app.route('/secrets')
 @login_required
 def secrets():
-    print(current_user.name) # what?? current_user? where does the program know what that is??
-    return render_template("secrets.html", name = current_user.name)
+    print(current_user.name) 
+    if current_user:
+        logged_in = True
+    else:
+        logged_in = False
+    return render_template("secrets.html", name = current_user.name, logged_in = logged_in)
 
 @app.route('/logout')
 def logout():
