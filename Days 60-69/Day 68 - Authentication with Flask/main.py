@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, url_for, redirect, flash, sen
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String
+from sqlalchemy import Integer, String, exc
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 
 app = Flask(__name__)
@@ -50,34 +50,52 @@ def home():
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        password = request.form['password']
-        hash_and_salted_password = generate_password_hash(password, method='pbkdf2', salt_length=8)
 
-        new_user = User(email = request.form['email'], password = hash_and_salted_password, name = request.form['name'])
-        # to tap into a field of the form, you could also do it like this: request.form.get('name')
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            password = request.form['password']
+            hash_and_salted_password = generate_password_hash(password, method='pbkdf2', salt_length=8)
 
-        login_user(new_user)
+            new_user = User(email = request.form['email'], password = hash_and_salted_password, name = request.form['name'])
+            # to tap into a field of the form, you could also do it like this: request.form.get('name')
 
-        # Can redirect() and get name from the current_user
-        return redirect(url_for("secrets"))    
+            
+
+            db.session.add(new_user)
+            db.session.commit()
+
+            login_user(new_user)
+
+            # Can redirect() and get name from the current_user
+            return redirect(url_for("secrets"))    
+
+        except exc.IntegrityError:
+            error = "You've already signed in with that email, log in instead!" 
+            return render_template("login.html", error = error)
+
     
     return render_template("register.html")
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
+    error = None
     if request.method == 'POST':
-        user_emal = request.form.get('email')
+        user_email = request.form.get('email')
         user_password = request.form.get('password')
-        user = db.session.execute(db.select(User).where(User.email == user_emal)).scalar()
+        user = db.session.execute(db.select(User).where(User.email == user_email)).scalar()
+
+        if not user:
+            error = "That email does not exist. Please try again!"
+            return render_template("login.html", error = error)
 
         if check_password_hash(user.password, user_password):
-            login_user(user)
+            login_user(user) 
             return redirect(url_for('secrets'))
-        else:
-            pass
-    return render_template("login.html")
+        else: 
+            error = "Password incorrect, veuillez ressayer"
+            return render_template("login.html", error = error)
+          
+        
+    return render_template("login.html", error = error)
 
 @app.route('/secrets')
 @login_required
