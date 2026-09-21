@@ -10,9 +10,14 @@ from sqlalchemy import Integer, String, Text
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 # Import your forms from the forms.py
+from forms import RegisterForm
 from forms import CreatePostForm
 import os
 from dotenv import load_dotenv
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / "instance" / "posts.db"
 
 app = Flask(__name__)
 ckeditor = CKEditor(app)
@@ -20,14 +25,14 @@ Bootstrap5(app)
 
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-print(os.getenv('SECRET_KEY'))
+
 # TODO: Configure Flask-Login
 
 
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DB_PATH.as_posix()}"
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
 
@@ -45,16 +50,32 @@ class BlogPost(db.Model):
 
 
 # TODO: Create a User table for all your registered users. 
-
+class User(db.Model):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(250), nullable=False)
+    name: Mapped[str] = mapped_column(String(250), nullable=False)
 
 with app.app_context():
     db.create_all()
 
 
 # TODO: Use Werkzeug to hash the user's password when creating a new user.
-@app.route('/register')
+@app.route('/register',  methods=['GET', 'POST'])
 def register():
-    return render_template("register.html")
+    register_form = RegisterForm()
+    if register_form.validate_on_submit():
+        email = register_form.email.data
+        password = register_form.password.data
+        name = register_form.name.data
+
+        hash_and_salted_password = generate_password_hash(password, method='pbkdf2', salt_length=8)
+
+        new_user = User(email=email, password=hash_and_salted_password, name=name)
+        db.session.add(new_user)
+        db.session.commit()
+    return render_template("register.html", form = register_form)
 
 
 # TODO: Retrieve a user from the database based on their email. 
