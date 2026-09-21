@@ -10,7 +10,7 @@ from sqlalchemy import Integer, String, Text
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 # Import your forms from the forms.py
-from forms import RegisterForm
+from forms import RegisterForm, LoginForm
 from forms import CreatePostForm
 import os
 from dotenv import load_dotenv
@@ -26,12 +26,13 @@ Bootstrap5(app)
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
-# TODO: Configure Flask-Login
-
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
+
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DB_PATH.as_posix()}"
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
@@ -50,7 +51,7 @@ class BlogPost(db.Model):
 
 
 # TODO: Create a User table for all your registered users. 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
@@ -61,7 +62,10 @@ with app.app_context():
     db.create_all()
 
 
-# TODO: Use Werkzeug to hash the user's password when creating a new user.
+@login_manager.user_loader
+def load_user(user_id):
+    return db.get_or_404(User, user_id)
+
 @app.route('/register',  methods=['GET', 'POST'])
 def register():
     register_form = RegisterForm()
@@ -75,13 +79,26 @@ def register():
         new_user = User(email=email, password=hash_and_salted_password, name=name)
         db.session.add(new_user)
         db.session.commit()
+
+        login_user(new_user)
+        return redirect(url_for('get_all_posts'))
     return render_template("register.html", form = register_form)
 
 
 # TODO: Retrieve a user from the database based on their email. 
-@app.route('/login')
+
+@app.route('/login', methods = ['GET', 'POST'])
 def login():
-    return render_template("login.html")
+    login_form = LoginForm()
+    if login_form.validate_on_submit():
+        email = login_form.email.data
+        password = login_form.password.data
+        user = db.session.execute(db.select(User).where(User.email == email)).scalar()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('get_all_posts'))
+       
+    return render_template("login.html", form = login_form)
 
 
 @app.route('/logout')
