@@ -6,7 +6,7 @@ from flask_gravatar import Gravatar
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import Integer, String, Text
+from sqlalchemy import Integer, String, Text, exc
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 # Import your forms from the forms.py
@@ -70,18 +70,24 @@ def load_user(user_id):
 def register():
     register_form = RegisterForm()
     if register_form.validate_on_submit():
-        email = register_form.email.data
-        password = register_form.password.data
-        name = register_form.name.data
+        
+            email = register_form.email.data
 
-        hash_and_salted_password = generate_password_hash(password, method='pbkdf2', salt_length=8)
-
-        new_user = User(email=email, password=hash_and_salted_password, name=name)
-        db.session.add(new_user)
-        db.session.commit()
-
-        login_user(new_user)
-        return redirect(url_for('get_all_posts'))
+            user_exists = db.session.execute(db.select(User).where(User.email == email)).scalar()
+            if user_exists:
+                flash("You've already signed up with that email, log in instead!")
+                return redirect(url_for('login'))
+            
+            password = register_form.password.data
+            name = register_form.name.data
+            hash_and_salted_password = generate_password_hash(password, method='pbkdf2', salt_length=8)
+            new_user = User(email=email, password=hash_and_salted_password, name=name)
+            db.session.add(new_user)
+            db.session.commit()
+            login_user(new_user)
+            return redirect(url_for('get_all_posts'))
+            
+           
     return render_template("register.html", form = register_form)
 
 
