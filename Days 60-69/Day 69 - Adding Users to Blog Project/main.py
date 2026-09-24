@@ -66,6 +66,7 @@ with app.app_context():
 def load_user(user_id):
     return db.get_or_404(User, user_id)
 
+
 @app.route('/register',  methods=['GET', 'POST'])
 def register():
     register_form = RegisterForm()
@@ -103,12 +104,18 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             return redirect(url_for('get_all_posts'))
-       
+        elif not user:
+            flash("The user doesn't exist in the database!")
+            return redirect(url_for('login'))
+        else:
+            flash("The password is incorrect!")
+            return redirect(url_for('login'))
     return render_template("login.html", form = login_form)
 
 
 @app.route('/logout')
 def logout():
+    logout_user()
     return redirect(url_for('get_all_posts'))
 
 
