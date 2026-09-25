@@ -176,6 +176,7 @@ def get_all_posts():
 def show_post(post_id):
     form = CommentForm()
     requested_post = db.get_or_404(BlogPost, post_id)
+    the_comments_on_this_post = requested_post.comments
     if form.validate_on_submit():
         if current_user.is_authenticated:
             comment_text = form.body.data
@@ -185,7 +186,7 @@ def show_post(post_id):
         else:
             flash("You can log in if you want to add comments <3")
             return redirect(url_for("login"))
-    return render_template("post.html", post=requested_post, form = form)
+    return render_template("post.html", post=requested_post, form = form, comments = the_comments_on_this_post)
 
 
 # TODO: Use a decorator so only an admin user can create a new post
