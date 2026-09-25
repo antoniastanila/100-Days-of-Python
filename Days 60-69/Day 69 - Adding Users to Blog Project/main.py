@@ -141,7 +141,13 @@ def logout():
 def get_all_posts():
     result = db.session.execute(db.select(BlogPost))
     posts = result.scalars().all()
-    return render_template("index.html", all_posts=posts)
+
+    authors_list = []
+    for post in posts:
+        author = db.get_or_404(User, post.author_id)
+        authors_list.append(author)  
+
+    return render_template("index.html", all_posts=posts, authors_list = authors_list)
 
 
 # TODO: Allow logged-in users to comment on posts
